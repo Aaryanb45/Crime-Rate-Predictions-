@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/yourusername/CRIME_RATE_PREDICTION.git'
+                git 'https://github.com/Aaryanb45/Crime-Rate-Predictions-.git'
             }
         }
 
