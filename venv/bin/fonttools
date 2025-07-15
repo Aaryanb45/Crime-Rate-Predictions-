@@ -1,4 +1,4 @@
-#!/Users/aryanbansal/Documents/CRIME_RATE_PREDICTION/venv/bin/python
+#!/Users/aryanbansal/Documents/CRIME_RATE_PREDICTION/venv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys

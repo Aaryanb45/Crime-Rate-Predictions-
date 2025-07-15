@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+import joblib
 
-app = Flask(__name__)  # 🔹 Must come before any @app.route
+app = Flask(__name__)
 
 # Load cleaned data and model
 scaler = StandardScaler()
@@ -21,23 +22,11 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        input_data = request.json['features']
+        input_data = request.json['features']  # Expecting list of numerical features
         input_array = np.array(input_data).reshape(1, -1)
         input_scaled = scaler.transform(input_array)
         cluster = model.predict(input_scaled)[0]
-
-        cluster_map = {
-            0: "Low Risk",
-            1: "Moderate Risk",
-            2: "High Risk",
-            3: "Severe Risk"
-        }
-
-        return jsonify({
-            'cluster': int(cluster),
-            'label': cluster_map.get(int(cluster), "Unknown")
-        })
-
+        return jsonify({'cluster': int(cluster)})
     except Exception as e:
         return jsonify({'error': str(e)})
 
