@@ -2,12 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/Aaryanb45/Crime-Rate-Predictions-.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t crime-rate-app .'
