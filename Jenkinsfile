@@ -6,6 +6,7 @@ pipeline {
         SONAR_SCANNER_HOME = tool 'SonarQubeScanner' // Jenkins tool name
         SONAR_HOST_URL = 'http://localhost:9000'
         SONAR_PROJECT_KEY = 'crime-rate-app'
+        PYTHON_BIN = '/Library/Frameworks/Python.framework/Versions/3.11/bin/python3'
     }
 
     stages {
@@ -20,10 +21,10 @@ pipeline {
                 withSonarQubeEnv('SonarQubeScanner') {
                     sh '''
                     ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
-                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=${SONAR_HOST_URL} \
-                    -Dsonar.login=$SONAR_AUTH_TOKEN
+                      -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=${SONAR_HOST_URL} \
+                      -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
@@ -31,8 +32,8 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'python3 -m unittest discover tests'
+                sh '${PYTHON_BIN} -m pip install -r requirements.txt'
+                sh '${PYTHON_BIN} -m unittest discover tests'
             }
         }
 
