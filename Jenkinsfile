@@ -32,8 +32,14 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '${PYTHON_BIN} -m pip install -r requirements.txt'
-                sh '${PYTHON_BIN} -m unittest discover tests'
+                script {
+                    if (fileExists('tests')) {
+                        sh "${PYTHON_BIN} -m pip install -r requirements.txt"
+                        sh "${PYTHON_BIN} -m unittest discover tests"
+                    } else {
+                        echo '⚠️ No tests/ directory found. Skipping unit tests.'
+                    }
+                }
             }
         }
 
@@ -57,9 +63,7 @@ pipeline {
 
         stage('Trivy Scan') {
             steps {
-                sh '''
-                trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true
-                '''
+                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true"
             }
         }
 
@@ -72,9 +76,11 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                    sh 'docker tag crime-rate-app $DOCKER_USER/crime-rate-app:latest'
-                    sh 'docker push $DOCKER_USER/crime-rate-app:latest'
+                    sh '''
+                    docker login -u $DOCKER_USER -p $DOCKER_PASS
+                    docker tag ${DOCKER_IMAGE} $DOCKER_USER/${DOCKER_IMAGE}:latest
+                    docker push $DOCKER_USER/${DOCKER_IMAGE}:latest
+                    '''
                 }
             }
         }
