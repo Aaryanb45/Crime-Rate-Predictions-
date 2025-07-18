@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'crime-rate-app'
-        SONAR_SCANNER_HOME = tool 'SonarQubeScanner' // Jenkins tool name
+        SONAR_SCANNER_HOME = tool 'SonarQubeScanner' // Jenkins configured tool
         SONAR_HOST_URL = 'http://localhost:9000'
         SONAR_PROJECT_KEY = 'crime-rate-app'
         PYTHON_BIN = '/Library/Frameworks/Python.framework/Versions/3.11/bin/python3'
@@ -15,32 +15,26 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQubeScanner') {
                     sh '''
                     ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
-                    -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                    -Dsonar.sources=. \
-                    -Dsonar.exclusions=**/venv/**,**/tests/**,**/*.csv \
-                    -Dsonar.host.url=${SONAR_HOST_URL} \
-                    -Dsonar.login=$SONAR_AUTH_TOKEN
+                      -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                      -Dsonar.sources=. \
+                      -Dsonar.exclusions=**/venv/**,**/tests/**,**/*.csv \
+                      -Dsonar.host.url=${SONAR_HOST_URL} \
+                      -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
         }
 
-
         stage('Run Tests') {
             steps {
-                script {
-                    if (fileExists('tests')) {
-                        sh "${PYTHON_BIN} -m pip install -r requirements.txt"
-                        sh "${PYTHON_BIN} -m unittest discover tests"
-                    } else {
-                        echo '⚠️ No tests/ directory found. Skipping unit tests.'
-                    }
-                }
+                sh '${PYTHON_BIN} -m pip install -r requirements.txt'
+                sh '${PYTHON_BIN} -m unittest discover -s app'
             }
         }
 
@@ -64,7 +58,9 @@ pipeline {
 
         stage('Trivy Scan') {
             steps {
-                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true"
+                sh '''
+                trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true
+                '''
             }
         }
 
@@ -77,11 +73,9 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    docker login -u $DOCKER_USER -p $DOCKER_PASS
-                    docker tag ${DOCKER_IMAGE} $DOCKER_USER/${DOCKER_IMAGE}:latest
-                    docker push $DOCKER_USER/${DOCKER_IMAGE}:latest
-                    '''
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker tag ${DOCKER_IMAGE} $DOCKER_USER/${DOCKER_IMAGE}:latest'
+                    sh 'docker push $DOCKER_USER/${DOCKER_IMAGE}:latest'
                 }
             }
         }
