@@ -41,12 +41,17 @@ pipeline {
         }
 
         stage('Snyk Scan') {
+            agent {
+                docker {
+                    image 'node:20'
+                }
+            }
             steps {
                 withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
                     sh '''
-                    npm install -g snyk || true
+                    npm install -g snyk
                     snyk auth $SNYK_TOKEN
-                    snyk test --file=requirements.txt --package-manager=pip || true
+                    snyk test --file=requirements.txt --package-manager=pip --all-projects --no-update-notifier || true
                     '''
                 }
             }
