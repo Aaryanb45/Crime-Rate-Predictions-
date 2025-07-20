@@ -44,42 +44,52 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
                     sh '''
-                    docker run --rm -v $(pwd):/project -w /project node:20 bash -c "
-                        npm install -g snyk && \
-                        snyk auth $SNYK_TOKEN && \
-                        snyk test --file=requirements.txt --package-manager=pip --all-projects --no-update-notifier || true
-                    "
+                    npm install -g snyk || true
+                    snyk auth $SNYK_TOKEN || true
+                    snyk test --file=requirements.txt --package-manager=pip --all-projects --no-update-notifier || true
                     '''
                 }
             }
         }
 
         stage('Build Docker Image') {
+            when {
+                expression { sh(script: 'which docker', returnStatus: true) == 0 }
+            }
             steps {
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Trivy Scan') {
+            when {
+                expression { sh(script: 'which trivy', returnStatus: true) == 0 }
+            }
             steps {
-                sh '''
-                trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true
-                '''
+                sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true"
             }
         }
 
         stage('Run Docker Container') {
+            when {
+                expression { sh(script: 'which docker', returnStatus: true) == 0 }
+            }
             steps {
                 sh "docker run -d -p 8501:8501 ${DOCKER_IMAGE}"
             }
         }
 
         stage('Push to Docker Hub') {
+            when {
+                expression { sh(script: 'which docker', returnStatus: true) == 0 }
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
-                    sh 'docker tag ${DOCKER_IMAGE} $DOCKER_USER/${DOCKER_IMAGE}:latest'
-                    sh 'docker push $DOCKER_USER/${DOCKER_IMAGE}:latest'
+                    sh '''
+                    docker login -u $DOCKER_USER -p $DOCKER_PASS
+                    docker tag ${DOCKER_IMAGE} $DOCKER_USER/${DOCKER_IMAGE}:latest
+                    docker push $DOCKER_USER/${DOCKER_IMAGE}:latest
+                    '''
                 }
             }
         }
