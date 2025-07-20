@@ -18,7 +18,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-auth-token', variable: 'SONAR_AUTH_TOKEN')]) {
+                withCredentials([string(credentialsId: 'sonarqube-token1', variable: 'SONAR_AUTH_TOKEN')]) {
                     withSonarQubeEnv('SonarQubeScanner') {
                         sh """
                         \$SONAR_SCANNER_HOME/bin/sonar-scanner \\
