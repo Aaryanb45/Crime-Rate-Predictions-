@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'crime-rate-app'
-        SONAR_SCANNER_HOME = tool 'SonarQubeScanner' // Jenkins configured tool
+        SONAR_SCANNER_HOME = tool 'SonarQubeScanner'
         SONAR_HOST_URL = 'http://localhost:9000'
         SONAR_PROJECT_KEY = 'crime-rate-app'
         PYTHON_BIN = '/Library/Frameworks/Python.framework/Versions/3.11/bin/python3'
@@ -18,15 +18,17 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQubeScanner') {
-                    sh '''
-                    ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
-                      -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                      -Dsonar.sources=. \
-                      -Dsonar.exclusions=**/venv/**,**/tests/**,**/*.csv \
-                      -Dsonar.host.url=${SONAR_HOST_URL} \
-                      -Dsonar.login=$SONAR_AUTH_TOKEN
-                    '''
+                withCredentials([string(credentialsId: 'sonar-auth-token', variable: 'SONAR_AUTH_TOKEN')]) {
+                    withSonarQubeEnv('SonarQubeScanner') {
+                        sh """
+                        \$SONAR_SCANNER_HOME/bin/sonar-scanner \\
+                          -Dsonar.projectKey=\$SONAR_PROJECT_KEY \\
+                          -Dsonar.sources=. \\
+                          -Dsonar.exclusions=**/venv/**,**/tests/**,**/*.csv \\
+                          -Dsonar.host.url=\$SONAR_HOST_URL \\
+                          -Dsonar.token=\$SONAR_AUTH_TOKEN
+                        """
+                    }
                 }
             }
         }
@@ -34,7 +36,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '${PYTHON_BIN} -m pip install -r requirements.txt'
-                sh '${PYTHON_BIN} -m unittest discover -s app'
+                sh '${PYTHON_BIN} -m unittest discover'
             }
         }
 
@@ -44,7 +46,7 @@ pipeline {
                     sh '''
                     npm install -g snyk || true
                     snyk auth $SNYK_TOKEN
-                    snyk test --file=requirements.txt || true
+                    snyk test --file=requirements.txt --package-manager=pip || true
                     '''
                 }
             }
