@@ -79,7 +79,8 @@ cd crime-rate-prediction
 📁 Project Structure
 <pre> <code> crime-rate-prediction/ ├── app.py ├── requirements.txt ├── Dockerfile ├── Jenkinsfile ├── data/ ├── models/ ├── notebooks/ ├── tests/ └── README.md </code> </pre>
 
-
+📄 License
+Licensed under the MIT License.
 
 
 
