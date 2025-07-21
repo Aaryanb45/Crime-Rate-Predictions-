@@ -48,5 +48,5 @@ cd crime-rate-prediction
 
 
 📦 Install Dependencies
-pip install -r requirements.txt
+<pre> <code>pip install -r requirements.txt</code> </pre>
 
