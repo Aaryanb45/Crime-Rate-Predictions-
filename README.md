@@ -65,6 +65,7 @@ cd crime-rate-prediction
 <pre> <code>docker run -d -p 8501:8501 crime-rate-app</code> </pre>
 
 🧬 CI/CD Pipeline (Jenkins)
+
 ✅ SonarQube code quality analysis
 
 🧪 Python unit testing
