@@ -45,3 +45,8 @@ This project leverages real-world crime datasets to:
 ```bash
 git clone https://github.com/<your-username>/crime-rate-prediction.git
 cd crime-rate-prediction
+
+
+📦 Install Dependencies
+pip install -r requirements.txt
+
