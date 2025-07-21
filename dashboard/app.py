@@ -7,15 +7,30 @@ from sklearn.cluster import KMeans
 from st_aggrid import AgGrid, GridOptionsBuilder
 import os
 
-# Updated paths for Docker container
-st.write("📂 Working Directory:", os.getcwd())
-st.write("📄 Files in /app/data:", os.listdir("/app/data"))
-
+# ✅ Setup
 st.set_page_config(page_title="Crime Rate Dashboard", layout="wide")
 st.title("🚨 Crime Rate Prediction Dashboard")
 
+working_dir = os.getcwd()
+data_path = os.path.join(working_dir, "data")
+st.write("📂 Working Directory:", working_dir)
+
+# ✅ Check data folder and list files (safe)
+if os.path.exists(data_path):
+    try:
+        st.write("📄 Files in data/:", os.listdir(data_path))
+    except PermissionError:
+        st.warning("⚠️ Permission denied to list files in 'data/' folder.")
+else:
+    st.warning("⚠️ 'data/' folder not found. Please ensure it exists.")
+
 # ✅ Load and preprocess data
-df = pd.read_csv("/app/data/cleaned_crime_data.csv", engine='python')
+try:
+    df = pd.read_csv(os.path.join(data_path, "cleaned_crime_data.csv"), engine='python')
+except Exception as e:
+    st.error(f"❌ Failed to load data: {e}")
+    st.stop()
+
 scaler = StandardScaler()
 scaled_data = scaler.fit_transform(df)
 
@@ -36,12 +51,12 @@ st.sidebar.header("🔎 Filter Clusters")
 selected_clusters = st.sidebar.multiselect("Select Cluster Labels:", options=list(cluster_labels.values()), default=list(cluster_labels.values()))
 filtered_df = df[df['LABEL'].isin(selected_clusters)]
 
-# Plotly pie chart for cluster distribution
+# 📊 Pie chart for distribution
 st.subheader("📊 Cluster Distribution")
 fig_pie = px.pie(filtered_df, names='LABEL', title='Crime Risk Distribution by Cluster')
 st.plotly_chart(fig_pie, use_container_width=True)
 
-# Bar chart for total crimes per cluster
+# 📈 Bar chart for crimes per cluster
 st.subheader("📈 Crimes per Cluster")
 fig_bar = px.bar(
     filtered_df.groupby('LABEL')['TOTAL_CRIMES'].sum().reset_index(),
@@ -52,7 +67,7 @@ fig_bar = px.bar(
 )
 st.plotly_chart(fig_bar, use_container_width=True)
 
-# AgGrid summary table
+# 📋 AgGrid table
 st.subheader("📋 Interactive Crime Table")
 gb = GridOptionsBuilder.from_dataframe(filtered_df)
 gb.configure_pagination()
@@ -60,22 +75,18 @@ gb.configure_side_bar()
 gb.configure_default_column(editable=False, groupable=True)
 AgGrid(filtered_df, gridOptions=gb.build(), enable_enterprise_modules=True, theme='balham')
 
-# Upload section
+# 📁 Upload CSV for prediction
 st.subheader("📁 Upload Your Own CSV to Predict Cluster")
 uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
 if uploaded_file:
     try:
         user_df = pd.read_csv(uploaded_file)
-
-        # Ensure only numeric columns
         numeric_user_df = user_df.select_dtypes(include=np.number)
 
-        # Check dimension match
         if numeric_user_df.shape[1] != scaled_data.shape[1]:
-            st.warning(f"⚠️ Uploaded data has {numeric_user_df.shape[1]} numeric features but model expects {scaled_data.shape[1]}. Results may be inaccurate.")
+            st.warning(f"⚠️ Uploaded data has {numeric_user_df.shape[1]} numeric features but model expects {scaled_data.shape[1]}.")
 
-        # Trim or pad columns
         min_cols = min(numeric_user_df.shape[1], scaled_data.shape[1])
         input_to_model = numeric_user_df.iloc[:, :min_cols]
 
@@ -83,13 +94,9 @@ if uploaded_file:
             padding = np.zeros((input_to_model.shape[0], scaled_data.shape[1] - min_cols))
             input_to_model = np.hstack([input_to_model.values, padding])
 
-        # Convert to DataFrame for easier NaN handling
         input_to_model = pd.DataFrame(input_to_model)
-
-        # Fill missing values with column means
         input_to_model.fillna(input_to_model.mean(), inplace=True)
 
-        # Scale and predict
         user_scaled = scaler.transform(input_to_model)
         user_clusters = model.predict(user_scaled)
 
