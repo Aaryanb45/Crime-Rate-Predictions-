@@ -51,3 +51,35 @@ cd crime-rate-prediction
 📦 Install Dependencies
 <pre> <code>pip install -r requirements.txt</code> </pre>
 
+▶️ Run Streamlit Dashboard
+<pre> <code>streamlit run app.py</code> </pre>
+
+🧪 Run Unit Tests
+<pre> <code>python3 -m unittest discover</code> </pre>
+
+🐳 Docker Usage
+🔨 Build Docker Image
+<pre> <code>docker build -t crime-rate-app .</code> </pre>
+
+▶️ Run Docker Container
+<pre> <code>docker run -d -p 8501:8501 crime-rate-app</code> </pre>
+
+🧬 CI/CD Pipeline (Jenkins)
+✅ SonarQube code quality analysis
+
+🧪 Python unit testing
+
+🐳 Docker image build & scan with Trivy
+
+🚀 DockerHub push
+
+🔐 Security scan using Snyk
+
+📁 Project Structure
+<pre> <code> crime-rate-prediction/ ├── app.py ├── requirements.txt ├── Dockerfile ├── Jenkinsfile ├── data/ ├── models/ ├── notebooks/ ├── tests/ └── README.md </code> </pre>
+
+
+
+
+
+
