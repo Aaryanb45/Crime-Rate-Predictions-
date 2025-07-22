@@ -7,28 +7,28 @@ from sklearn.cluster import KMeans
 from st_aggrid import AgGrid, GridOptionsBuilder
 import os
 
-# ✅ Setup
+# Setup
 st.set_page_config(page_title="Crime Rate Dashboard", layout="wide")
-st.title("🚨 Crime Rate Prediction Dashboard")
+st.title("Crime Rate Prediction Dashboard")
 
 working_dir = os.getcwd()
 data_path = os.path.join(working_dir, "data")
-st.write("📂 Working Directory:", working_dir)
+st.write(" Working Directory:", working_dir)
 
-# ✅ Check data folder and list files (safe)
+#  Check data folder and list files (safe)
 if os.path.exists(data_path):
     try:
-        st.write("📄 Files in data/:", os.listdir(data_path))
+        st.write(" Files in data/:", os.listdir(data_path))
     except PermissionError:
-        st.warning("⚠️ Permission denied to list files in 'data/' folder.")
+        st.warning("⚠ Permission denied to list files in 'data/' folder.")
 else:
-    st.warning("⚠️ 'data/' folder not found. Please ensure it exists.")
+    st.warning("⚠ 'data/' folder not found. Please ensure it exists.")
 
-# ✅ Load and preprocess data
+# Load and preprocess data
 try:
     df = pd.read_csv(os.path.join(data_path, "cleaned_crime_data.csv"), engine='python')
 except Exception as e:
-    st.error(f"❌ Failed to load data: {e}")
+    st.error(f" Failed to load data: {e}")
     st.stop()
 
 scaler = StandardScaler()
@@ -47,17 +47,17 @@ cluster_labels = {
 df['LABEL'] = df['CLUSTER'].map(cluster_labels)
 
 # Sidebar filters
-st.sidebar.header("🔎 Filter Clusters")
+st.sidebar.header(" Filter Clusters")
 selected_clusters = st.sidebar.multiselect("Select Cluster Labels:", options=list(cluster_labels.values()), default=list(cluster_labels.values()))
 filtered_df = df[df['LABEL'].isin(selected_clusters)]
 
-# 📊 Pie chart for distribution
-st.subheader("📊 Cluster Distribution")
+#  Pie chart for distribution
+st.subheader(" Cluster Distribution")
 fig_pie = px.pie(filtered_df, names='LABEL', title='Crime Risk Distribution by Cluster')
 st.plotly_chart(fig_pie, use_container_width=True)
 
-# 📈 Bar chart for crimes per cluster
-st.subheader("📈 Crimes per Cluster")
+#  Bar chart for crimes per cluster
+st.subheader("Crimes per Cluster")
 fig_bar = px.bar(
     filtered_df.groupby('LABEL')['TOTAL_CRIMES'].sum().reset_index(),
     x='LABEL', y='TOTAL_CRIMES',
@@ -67,16 +67,16 @@ fig_bar = px.bar(
 )
 st.plotly_chart(fig_bar, use_container_width=True)
 
-# 📋 AgGrid table
-st.subheader("📋 Interactive Crime Table")
+#  AgGrid table
+st.subheader(" Interactive Crime Table")
 gb = GridOptionsBuilder.from_dataframe(filtered_df)
 gb.configure_pagination()
 gb.configure_side_bar()
 gb.configure_default_column(editable=False, groupable=True)
 AgGrid(filtered_df, gridOptions=gb.build(), enable_enterprise_modules=True, theme='balham')
 
-# 📁 Upload CSV for prediction
-st.subheader("📁 Upload Your Own CSV to Predict Cluster")
+#  Upload CSV for prediction
+st.subheader(" Upload Your Own CSV to Predict Cluster")
 uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
 if uploaded_file:
@@ -85,7 +85,7 @@ if uploaded_file:
         numeric_user_df = user_df.select_dtypes(include=np.number)
 
         if numeric_user_df.shape[1] != scaled_data.shape[1]:
-            st.warning(f"⚠️ Uploaded data has {numeric_user_df.shape[1]} numeric features but model expects {scaled_data.shape[1]}.")
+            st.warning(f" Uploaded data has {numeric_user_df.shape[1]} numeric features but model expects {scaled_data.shape[1]}.")
 
         min_cols = min(numeric_user_df.shape[1], scaled_data.shape[1])
         input_to_model = numeric_user_df.iloc[:, :min_cols]
@@ -103,8 +103,8 @@ if uploaded_file:
         user_df['CLUSTER'] = user_clusters
         user_df['LABEL'] = user_df['CLUSTER'].map(cluster_labels)
 
-        st.success("✅ Predictions complete!")
+        st.success(" Predictions complete!")
         st.dataframe(user_df)
 
     except Exception as e:
-        st.error(f"⚠️ Error processing uploaded file: {e}")
+        st.error(f" Error processing uploaded file: {e}")
